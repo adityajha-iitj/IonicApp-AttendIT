@@ -33,6 +33,7 @@ import '@ionic/react/css/palettes/dark.system.css';
 /* Theme variables */
 import './theme/variables.css';
 import Login from './pages/Login';
+import CaptureQR from './pages/CaptureQR';
 import Register from './pages/Register';
 
 setupIonicReact();
@@ -44,6 +45,7 @@ const App: React.FC = () => (
         <Route exact path="/">
           <Login />
         </Route>
+        <Route component={CaptureQR} path="/capture" exact/>
         <Route component={Register} path="/register" exact/>
       </IonRouterOutlet>
     </IonReactRouter>

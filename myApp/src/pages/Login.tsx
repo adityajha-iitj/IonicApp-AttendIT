@@ -6,7 +6,7 @@ const Login: React.FC = () => {
   const history = useHistory();
 
   const handleRegisterClick = () => {
-    history.push('/register');
+    history.push('/capture');
   };
 
   return (
