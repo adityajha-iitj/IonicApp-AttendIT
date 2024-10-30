@@ -36,6 +36,7 @@ import Login from './pages/Login';
 import CaptureQR from './pages/CaptureQR';
 import Register from './pages/Register';
 import signup from './pages/signup';
+import CaptureYourself from './pages/CaptureYourself';
 
 setupIonicReact();
 
@@ -49,6 +50,7 @@ const App: React.FC = () => (
         <Route component={CaptureQR} path="/capture" exact/>
         <Route component={Register} path="/register" exact/>
         <Route component={signup} path= "/signup" exact />
+        <Route component={CaptureYourself} path="/captureYourself" exact/>
       </IonRouterOutlet>
     </IonReactRouter>
   </IonApp>

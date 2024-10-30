@@ -152,6 +152,9 @@ const Login: React.FC = () => {
                     </IonButton>
                   </IonText>
                   {message && <p className="mt-3 text-center">{message}</p>}
+                  <IonButton expand="block" color="secondary" onClick={handleloginClick}>
+                    Test Redirect to Capture
+                  </IonButton>
                 </IonCardContent>
               </IonCard>
             </IonCol>

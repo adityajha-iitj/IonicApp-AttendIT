@@ -1,12 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { Barcode, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonInput, IonFab, IonFabButton, IonIcon, IonAlert } from '@ionic/react';
+import {
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonFab,
+  IonFabButton,
+  IonIcon,
+  IonAlert,
+} from '@ionic/react';
 import { scanOutline } from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
+
+enum CourseCode {
+  MATH101 = 'MATH101',
+  PHYS102 = 'PHYS102',
+  CHEM103 = 'CHEM103',
+  CS104 = 'CS104',
+  // add other course codes as needed
+}
 
 const CaptureQR: React.FC = () => {
   const [isSupported, setIsSupported] = useState(false);
   const [barcodes, setBarcodes] = useState<Barcode[]>([]);
   const [alertShown, setAlertShown] = useState(false);
+  const history = useHistory();
 
   useEffect(() => {
     BarcodeScanner.isSupported().then((result) => {
@@ -20,13 +44,23 @@ const CaptureQR: React.FC = () => {
       setAlertShown(true);
       return;
     }
+
     const { barcodes: scannedBarcodes } = await BarcodeScanner.scan();
     setBarcodes([...barcodes, ...scannedBarcodes]);
+    validateAndRedirect(scannedBarcodes);
   };
 
   const requestPermissions = async (): Promise<boolean> => {
     const { camera } = await BarcodeScanner.requestPermissions();
     return camera === 'granted' || camera === 'limited';
+  };
+
+  const validateAndRedirect = (scannedBarcodes: Barcode[]) => {
+    scannedBarcodes.forEach((barcode) => {
+      if (Object.values(CourseCode).includes(barcode.rawValue as CourseCode)) {
+        history.push('/captureYourself');
+      }
+    });
   };
 
   return (
