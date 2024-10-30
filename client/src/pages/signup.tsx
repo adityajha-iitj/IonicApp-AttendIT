@@ -12,53 +12,43 @@ import {
   IonInput,
   IonLabel,
   IonItem,
+  IonText,
 } from '@ionic/react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 
 const Signup: React.FC = () => {
-  const { register, handleSubmit, setError } = useForm();
+  const { register, handleSubmit, setError, formState: { errors } } = useForm();
   const [image, setImage] = useState<File | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-
-
   const onSubmit = async (data: any) => {
-    console.log(data); // Log incoming data from the form
-  
+    console.log(data);
     try {
-  
-      // Ensure the image is valid and append it
-     
-      // Optional: Log each entry in formData to verify structure
-  
-      // Send POST request with formData as the body
       const response = await axios.post('http://localhost:5000/register', {
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'multipart/form-data', // Required for file uploads
+          'Content-Type': 'multipart/form-data',
         },
-        formdata : {
-        fullName : data.name,
-        email : data.email,
-        password : data.password,
+        formdata: {
+          fullName: data.name,
+          email: data.email,
+          password: data.password,
         }
       });
   
-      console.log(response.data); // Log response data
-      setMessage(response.data.message); // Display success message
+      console.log(response.data);
+      setMessage(response.data.message);
   
     } catch (error: any) {
       console.error('Error during registration:', error);
       if (error.response && error.response.data) {
-        // Handle specific error message from server
         setError('email', { type: 'manual', message: error.response.data.message });
       } else {
-        setMessage('Registration failed. Please try again.'); // Generic error message
+        setMessage('Registration failed. Please try again.');
       }
     }
   };
-  
   
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -78,37 +68,45 @@ const Signup: React.FC = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="w-full">
             <IonItem className="relative mb-5">
               <IonInput
-                {...register('email')}
+                {...register('email', {
+                  required: 'Email is required',
+                  pattern: {
+                    value: /^[a-zA-Z0-9._%+-]+@iitj\.ac\.in$/,
+                    message: 'Only emails ending with @iitj.ac.in are accepted',
+                  }
+                })}
                 label="Email"
                 labelPlacement="floating"
                 fill="solid"
-                placeholder="name@gmail.com"
+                placeholder="name@iitj.ac.in"
                 type="email"
-                required
               ></IonInput>
             </IonItem>
+            {errors.email && (
+              <IonText color="danger">
+                <p className="ion-padding-start">{String(errors.email.message)}</p>
+              </IonText>
+            )}
             <IonItem className="relative mb-5">
               <IonLabel position="floating">Password</IonLabel>
               <IonInput
-                {...register('password')}
+                {...register('password', { required: 'Password is required' })}
                 label="Password"
                 labelPlacement="floating"
                 fill="solid"
                 placeholder="........"
                 type="password"
-                required
               ></IonInput>
             </IonItem>
             <IonItem className="relative mb-5">
               <IonLabel position="floating">Confirm password</IonLabel>
               <IonInput
-                {...register('confirm_password')}
+                {...register('confirm_password', { required: 'Confirm Password is required' })}
                 label="Confirm Password"
                 labelPlacement="floating"
                 fill="solid"
                 placeholder="........"
                 type="password"
-                required
               ></IonInput>
             </IonItem>
             <IonGrid className="grid md:grid-cols-2 md:gap-6">
@@ -116,26 +114,24 @@ const Signup: React.FC = () => {
                 <IonCol>
                   <IonItem className="relative mb-5">
                     <IonInput
-                      {...register('name')}
+                      {...register('name', { required: 'First Name is required' })}
                       label="First Name"
                       labelPlacement="floating"
                       fill="solid"
                       placeholder="John"
                       type="text"
-                      required
                     ></IonInput>
                   </IonItem>
                 </IonCol>
                 <IonCol>
                   <IonItem className="relative mb-5">
                     <IonInput
-                      {...register('surname')}
+                      {...register('surname', { required: 'Last Name is required' })}
                       label="Last Name"
                       labelPlacement="floating"
                       fill="solid"
                       placeholder="Doe"
                       type="text"
-                      required
                     ></IonInput>
                   </IonItem>
                 </IonCol>
@@ -148,7 +144,7 @@ const Signup: React.FC = () => {
                 accept="image/*"
                 onChange={handleImageChange}
                 required
-                capture="environment" // Opens camera on mobile devices
+                capture="environment"
               />
             </IonItem>
             <IonButton

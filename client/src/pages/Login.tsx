@@ -21,9 +21,18 @@ import { useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 
+// Define the CourseCode enum
+enum CourseCode {
+  MATH101 = 'MATH101',
+  PHYS102 = 'PHYS102',
+  CHEM103 = 'CHEM103',
+  CS104 = 'CS104',
+  // add other course codes as needed
+}
+
 const Login: React.FC = () => {
   const history = useHistory();
-  const { register, handleSubmit, setError } = useForm();
+  const { register, handleSubmit, setError, formState: { errors } } = useForm();
   const [message, setMessage] = useState<string | null>(null);
 
   const handleloginClick = () => {
@@ -34,6 +43,12 @@ const Login: React.FC = () => {
   };
 
   const onSubmit = async (data: any) => {
+    // Check if the course code is valid before making the API request
+    if (!Object.values(CourseCode).includes(data.courseCode)) {
+      setMessage('Invalid Course Code'); // Display error message
+      return;
+    }
+    
     console.log('Form data:', data);
     try {
       // Send POST request to authenticate user
@@ -45,16 +60,16 @@ const Login: React.FC = () => {
         formdata: {
           email: data.email,
           password: data.password,
+          courseCode: data.courseCode, // Include course code in the request
         },
       });
-
 
       // Handle JWT from response and store it in local storage or state
       const token = response.data.token;
       localStorage.setItem('token', token); // Store JWT for later use
       setMessage("Login successful!"); // Success message or redirect
       handleloginClick();
-      
+
     } catch (error: any) {
       console.error('Login error:', error);
       setError('email', { type: 'manual', message: 'Login failed. Please try again.' });
@@ -107,6 +122,24 @@ const Login: React.FC = () => {
                       type="password"
                       required
                     ></IonInput>
+                    <br />
+                    <IonInput
+                      {...register('courseCode', {
+                        required: 'Course code is required',
+                        validate: (value) =>
+                          Object.values(CourseCode).includes(value) || 'Invalid Course Code',
+                      })}
+                      label="Course Code"
+                      labelPlacement="floating"
+                      fill="solid"
+                      placeholder="Enter course code (e.g., MATH101)"
+                      type="text"
+                    ></IonInput>
+                    {errors.courseCode && (
+                      <IonText color="danger">
+                        <p>{String(errors.courseCode.message)}</p>
+                      </IonText>
+                    )}
                     <br />
                     <IonButton expand="block" type="submit" color="primary">
                       Login to your account
