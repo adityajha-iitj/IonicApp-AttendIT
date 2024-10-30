@@ -1,37 +1,81 @@
-import { IonButton, IonContent, IonHeader, IonInput, IonPage, IonTitle, IonToolbar, IonGrid, IonRow, IonCol, IonText, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonImg } from '@ionic/react';
-import React from 'react';
+import React, { useState } from 'react';
+import {
+  IonButton,
+  IonContent,
+  IonHeader,
+  IonInput,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonText,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonImg,
+} from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import axios from 'axios';
 
 const Login: React.FC = () => {
   const history = useHistory();
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, setError } = useForm();
+  const [message, setMessage] = useState<string | null>(null);
 
   const handleloginClick = () => {
     history.push('/capture');
   };
   const handlesignpClick = () => {
     history.push('/signup');
-  }
-  const onSubmit = (data: any) => {
+  };
+
+  const onSubmit = async (data: any) => {
     console.log('Form data:', data);
+    try {
+      // Send POST request to authenticate user
+      const response = await axios.post('http://localhost:5000/login', {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        formdata: {
+          email: data.email,
+          password: data.password,
+        },
+      });
+
+
+      // Handle JWT from response and store it in local storage or state
+      const token = response.data.token;
+      localStorage.setItem('token', token); // Store JWT for later use
+      setMessage("Login successful!"); // Success message or redirect
+      handleloginClick();
+      
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setError('email', { type: 'manual', message: 'Login failed. Please try again.' });
+      setMessage('Login failed. Please check your credentials.');
+    }
   };
 
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar color={'primary'}>
-          <IonTitle>Login page</IonTitle>
+          <IonTitle>Login Page</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent class="ion-padding bg-gray-50 dark:bg-gray-900">
-        <IonGrid class="max-w-screen-md py-8 lg:py-16"> {/* Adjusted max width here */}
+        <IonGrid class="max-w-screen-md py-8 lg:py-16">
           <IonRow class="ion-justify-content-center ion-align-items-center">
             <IonCol size-md="5" class="ion-text-center">
-              {/* Circular Image */}
               <IonImg
-                src="./login_page.jpg" // Replace with your image source
-                className="rounded-full w-48 h-48 object-cover mx-auto" // Circular styling
+                src="./login_page.jpg"
+                className="rounded-full w-48 h-48 object-cover mx-auto"
                 alt="Profile"
               />
             </IonCol>
@@ -39,11 +83,11 @@ const Login: React.FC = () => {
               <IonCard className="lg:max-w-sm p-6 space-y-8 dark:bg-gray-800">
                 <IonCardHeader>
                   <IonCardTitle class="text-2xl font-bold text-gray-900 dark:text-white">
-                    sign in to mark attendence 
+                    Sign in to mark attendance
                   </IonCardTitle>
                 </IonCardHeader>
                 <IonCardContent>
-                  <form onSubmit={handleSubmit(onSubmit)} >
+                  <form onSubmit={handleSubmit(onSubmit)}>
                     <IonInput
                       {...register('email')}
                       label="Your email"
@@ -64,17 +108,7 @@ const Login: React.FC = () => {
                       required
                     ></IonInput>
                     <br />
-                    <IonInput
-                      {...register('course')}
-                      label="Course"
-                      labelPlacement="floating"
-                      fill="solid"
-                      placeholder="MAL2010"
-                      type="text"
-                      required
-                    ></IonInput>
-                    <br />
-                    <IonButton expand="block" type="submit" color="primary" onClick={handleloginClick}>
+                    <IonButton expand="block" type="submit" color="primary">
                       Login to your account
                     </IonButton>
                   </form>
@@ -84,6 +118,7 @@ const Login: React.FC = () => {
                       Register
                     </IonButton>
                   </IonText>
+                  {message && <p className="mt-3 text-center">{message}</p>}
                 </IonCardContent>
               </IonCard>
             </IonCol>
