@@ -21,6 +21,23 @@ const Signup: React.FC = () => {
   const { register, handleSubmit, setError, formState: { errors } } = useForm();
   const [image, setImage] = useState<File | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+const [base64Image, setBase64Image] = useState<string | null>(null);
+
+const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  if (event.target.files && event.target.files[0]) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      setBase64Image(reader.result as string); // Set the Base64 string
+    };
+
+    reader.readAsDataURL(file); // Convert to Base64
+  } else {
+    setBase64Image(null); // Reset if no file is selected
+  }
+};
+
 
   const onSubmit = async (data: any) => {
     console.log(data);
@@ -34,6 +51,7 @@ const Signup: React.FC = () => {
           fullName: data.name,
           email: data.email,
           password: data.password,
+          image : base64Image 
         }
       });
   
@@ -50,12 +68,7 @@ const Signup: React.FC = () => {
     }
   };
   
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setImage(event.target.files[0]);
-    }
-  };
-
+ 
   return (
     <IonPage>
       <IonHeader>
