@@ -4,22 +4,20 @@ const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
-const upload = require('./multer');
+const upload = require('./multer'); // Multer setup for handling file uploads
+const { exec } = require('child_process');
+const fs = require('fs');
 const bodyParser = require('body-parser');
 dotenv.config();
 const app = express();
-const cloudinary = require('cloudinary').v2;
+const sharp = require('sharp');
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET_KEY,
-});
 // Middleware
 app.use(express.json());
 app.use(cors());
-app.use(bodyParser.json({ limit: '100000mb' })); // Increase this limit as needed
+app.use(bodyParser.json({ limit: '100000mb' }));
 app.use(bodyParser.urlencoded({ limit: '100000mb', extended: true }));
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
@@ -32,18 +30,15 @@ const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  profileImage: { type: String },
+  embedding: { type: [Number] }, // Array to store embeddings
 });
 
 const User = mongoose.model('User', userSchema);
 
 // Register Endpoint
-app.post('/register', async (req, res) => {
- 
-  console.log(process.env.CLOUDINARY_API_KEY);
+app.post('/register', upload.single('image'), async (req, res) => {
   try {
-    const { fullName, email, password } = req.body.formdata;
-    console.log(req.body.formdata); 
+    const { fullName, email, password, image } = req.body.formdata;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -54,24 +49,70 @@ app.post('/register', async (req, res) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
-    let profileImageUrl = null;
-    if (req.body.formdata.image) {
-      const result = await cloudinary.uploader.upload(req.body.formdata.image);
-      profileImageUrl = result.secure_url; // Get the secure URL of the uploaded image
-    }
-    const user = new User({ fullName, email, password: hashedPassword , profileImage: profileImageUrl });
-    await user.save();
+    // Resize the image (optional)
+    const base64Image = image.replace(/^data:image\/\w+;base64,/, '');
+    const imageBuffer = Buffer.from(base64Image, 'base64');
+    const resizedImageBuffer = await sharp(imageBuffer)
+      .resize(224, 224)
+      .toFormat('jpeg')
+      .toBuffer();
+    const resizedBase64Image = resizedImageBuffer.toString('base64');
 
-    // Generate JWT token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Call Python script to generate embeddings
+    exec(`python generate_embedings.py "${resizedBase64Image}"`, async (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error generating embedding: ${stderr}`);
+        return res.status(500).json({ message: 'Failed to generate embedding' });
+      }
+    
+      // Clean the output from Python (remove any unexpected newlines or spaces)
+      let embeddingString = stdout.trim(); // Remove leading/trailing whitespace
+    
+      // Check if the output is a stringified array or just a comma-separated string
+      let embedding;
+      try {
+        // If the Python output is a valid JSON string (array format)
+        embedding = JSON.parse(embeddingString);
+    
+        // Check if the parsed embedding is an array of numbers
+        if (!Array.isArray(embedding) || embedding.some(val => isNaN(val))) {
+          throw new Error('Embedding contains invalid data');
+        }
+      } catch (err) {
+        // Handle case where the output is not a valid JSON array
+        // For example, if it's a comma-separated string
+        embedding = embeddingString.split(',').map(val => {
+          const num = parseFloat(val.trim());
+          return isNaN(num) ? null : num; // Return null for invalid numbers
+        }).filter(val => val !== null); // Remove any invalid numbers (NaN)
+    
+        if (embedding.length === 0) {
+          return res.status(400).json({ message: 'Embedding is invalid or empty' });
+        }
+      }
+    
+      // Now the embedding is a clean array of numbers
+      console.log('Embedding:', embedding);  // Optional: Log to verify
+    
+      // Create new user with valid embeddings (as numbers)
+      const user = new User({
+        fullName,
+        email,
+        password: hashedPassword,
+        embedding,  // Store the valid array of numbers
+      });
+    
+      await user.save();
+    
+      // Generate JWT token
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    // Return success response with token
-    res.status(201).json({
-      message: 'User registered successfully',
-      token,
+      // Return success response with token
+      res.status(201).json({
+        message: 'User registered successfully',
+        token,
+      });
     });
-    console.log("done");
   } catch (error) {
     console.error('Error registering user:', error);
     res.status(500).json({ message: 'Server error' });
@@ -81,7 +122,7 @@ app.post('/register', async (req, res) => {
 // Login Endpoint
 app.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body.formdata;
+    const { email, password } = req.body;
 
     // Check if the user exists
     const user = await User.findOne({ email });
@@ -108,7 +149,6 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 // Start Server
 const PORT = process.env.PORT || 5000;
