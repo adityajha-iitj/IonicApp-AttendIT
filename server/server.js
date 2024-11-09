@@ -10,6 +10,7 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 dotenv.config();
 const app = express();
+var similarity = require( 'compute-cosine-similarity' );
 const sharp = require('sharp');
 
 // Middleware
@@ -34,6 +35,7 @@ const userSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model('User', userSchema);
+
 
 // Register Endpoint
 app.post('/register', upload.single('image'), async (req, res) => {
@@ -119,6 +121,59 @@ app.post('/register', upload.single('image'), async (req, res) => {
   }
 });
 
+app.post('/captureYourself', upload.single('image'), async (req, res) => {
+  try {
+    // Validate the presence of the uploaded image
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image uploaded' });
+    }
+
+    // Convert and resize image
+    const imageBuffer = req.file.buffer;
+    const resizedImageBuffer = await sharp(imageBuffer)
+      .resize(224, 224)
+      .toFormat('jpeg')
+      .toBuffer();
+    const resizedBase64Image = resizedImageBuffer.toString('base64');
+
+    // Call Python script to generate embeddings
+    exec(`python generate_embedings.py "${resizedBase64Image}"`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Embedding generation error: ${stderr}`);
+        return res.status(500).json({ message: 'Embedding generation failed' });
+      }
+
+      // Clean and parse embedding data
+      let embeddingString = stdout.trim();
+      let embedding;
+
+      try {
+        embedding = JSON.parse(embeddingString);
+        if (!Array.isArray(embedding) || embedding.some(val => isNaN(val))) {
+          throw new Error('Invalid embedding data');
+        }
+      } catch (err) {
+        embedding = embeddingString.split(',').map(val => parseFloat(val.trim())).filter(val => !isNaN(val));
+        if (embedding.length === 0) {
+          return res.status(400).json({ message: 'Invalid or empty embedding' });
+        }
+      }
+      console.log(embedding);
+      
+
+      // Send the embedding array as a response
+      res.status(200).json({
+        message: 'Embedding generated successfully',
+        embedding,
+      });
+    });
+
+  } catch (error) {
+    console.error('Error processing image:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Login Endpoint
 app.post('/login', async (req, res) => {
   try {
@@ -149,6 +204,10 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// let similar=0
+// similar=similarity(embedding1,embedding)
+
 
 // Start Server
 const PORT = process.env.PORT || 5000;

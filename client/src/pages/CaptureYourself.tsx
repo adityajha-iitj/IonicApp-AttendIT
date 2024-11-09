@@ -23,10 +23,29 @@ const CaptureYourself: React.FC = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (selectedImage) {
       console.log('Image selected:', selectedImage);
-      // Handle image submission here (e.g., upload to server)
+      
+      // Create a FormData object to send the image
+      const formData = new FormData();
+      formData.append('image', selectedImage);
+  
+      // Send the image to the backend
+      try {
+        const response = await fetch('http://localhost:5000/captureYourself', {
+          method: 'POST',
+          body: formData,
+        });
+  
+        if (response.ok) {
+          console.log('Image uploaded successfully');
+        } else {
+          console.log('Image upload failed');
+        }
+      } catch (error) {
+        console.error('Error uploading image:', error);
+      }
     } else {
       console.log('No image selected');
     }
