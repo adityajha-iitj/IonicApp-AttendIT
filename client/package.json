@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "proxy" : "http://localhost:5000",
+  "proxy": "http://localhost:5000",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -28,9 +28,12 @@
     "axios": "^1.7.7",
     "ionicons": "^7.0.0",
     "jsonwebtoken": "^9.0.2",
+    "qrcode.react": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.53.1",
+    "react-native-svg": "^15.8.0",
+    "react-qr-code": "^2.0.15",
     "react-router": "^5.3.4",
     "react-router-dom": "^5.3.4"
   },

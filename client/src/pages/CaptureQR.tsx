@@ -57,7 +57,11 @@ const CaptureQR: React.FC = () => {
 
   const validateAndRedirect = (scannedBarcodes: Barcode[]) => {
     scannedBarcodes.forEach((barcode) => {
-      if (Object.values(CourseCode).includes(barcode.rawValue as CourseCode)) {
+      // Extract the first 7 characters of the QR code's raw value
+      const codeToCheck = barcode.rawValue?.substring(0, 7);
+      
+      // Check if the extracted code is in the CourseCode enum
+      if (codeToCheck && Object.values(CourseCode).includes(codeToCheck as CourseCode)) {
         history.push('/captureYourself');
       }
     });

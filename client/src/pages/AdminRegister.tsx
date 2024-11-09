@@ -19,7 +19,7 @@ import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom'; // Import useHistory for navigation
 
-const Signup: React.FC = () => {
+const AdminRegister: React.FC = () => {
   const { register, handleSubmit, setError, formState: { errors } } = useForm();
   const [image, setImage] = useState<File | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -162,16 +162,6 @@ const Signup: React.FC = () => {
                 </IonCol>
               </IonRow>
             </IonGrid>
-            <IonLabel position="floating">Upload your image</IonLabel>
-            <IonItem className="relative mb-5">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                required
-                capture="environment"
-              />
-            </IonItem>
             <IonButton
               type="submit"
               expand="full"
@@ -202,4 +192,4 @@ const Signup: React.FC = () => {
   );
 };
 
-export default Signup;
+export default AdminRegister;
