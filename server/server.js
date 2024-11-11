@@ -123,12 +123,10 @@ app.post('/register', upload.single('image'), async (req, res) => {
 
 app.post('/captureYourself', upload.single('image'), async (req, res) => {
   try {
-    // Validate the presence of the uploaded image
     if (!req.file) {
       return res.status(400).json({ message: 'No image uploaded' });
     }
 
-    // Convert and resize image
     const imageBuffer = req.file.buffer;
     const resizedImageBuffer = await sharp(imageBuffer)
       .resize(224, 224)
@@ -136,14 +134,12 @@ app.post('/captureYourself', upload.single('image'), async (req, res) => {
       .toBuffer();
     const resizedBase64Image = resizedImageBuffer.toString('base64');
 
-    // Call Python script to generate embeddings
-    exec(`python generate_embedings.py "${resizedBase64Image}"`, (error, stdout, stderr) => {
+    exec(`python generate_embedings.py "${resizedBase64Image}"`, async (error, stdout, stderr) => {
       if (error) {
         console.error(`Embedding generation error: ${stderr}`);
         return res.status(500).json({ message: 'Embedding generation failed' });
       }
 
-      // Clean and parse embedding data
       let embeddingString = stdout.trim();
       let embedding;
 
@@ -158,13 +154,21 @@ app.post('/captureYourself', upload.single('image'), async (req, res) => {
           return res.status(400).json({ message: 'Invalid or empty embedding' });
         }
       }
-      console.log(embedding);
-      
 
-      // Send the embedding array as a response
+      // Retrieve the registered user's embedding for comparison (assuming it’s saved in the User model)
+      const user = await User.findOne({ email: req.body.email });
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const similarity = cosineSimilarity(embedding, user.embedding);
+      if (similarity >= 0.8) {
+        console.log('Attendance marked');
+      }
+
       res.status(200).json({
-        message: 'Embedding generated successfully',
-        embedding,
+        message: 'Embedding generated and similarity checked successfully',
+        similarity,
       });
     });
 
