@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import QRCode from 'react-qr-code';
+import QRCode from 'qrcode';
 import {
   IonContent,
   IonHeader,
@@ -25,6 +25,17 @@ const initialCourses = [
   { code: 'PHYS102', name: 'Physics 102' },
 ];
 
+// Function to generate a random string
+const generateRandomString = (length: number): string => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let randomString = '';
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    randomString += characters[randomIndex];
+  }
+  return randomString;
+};
+
 const downloadAttendance = (courseCode: string) => {
   const attendanceData = [
     { date: '2024-10-10', time: '10:00 AM', student: 'John Doe' },
@@ -43,7 +54,7 @@ const downloadAttendance = (courseCode: string) => {
 
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${courseCode}_Attendance.csv`;
+  link.download = `${courseCode}`;
   document.body.appendChild(link);
   link.click();
 
@@ -54,16 +65,23 @@ const downloadAttendance = (courseCode: string) => {
 const AdminDashboard: React.FC = () => {
   const [courses, setCourses] = useState(initialCourses);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
-  const [qrCodeValue, setQrCodeValue] = useState<string | null>(null);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isAddCourseModalOpen, setIsAddCourseModalOpen] = useState(false);
   const [newCourse, setNewCourse] = useState({ code: '', name: '' });
 
-  const generateRandomQRCode = (courseCode: string) => {
-    const randomString = `${courseCode}-${Math.random().toString(36).substr(2, 9)}`;
-    setQrCodeValue(randomString);
-    setSelectedCourse(courseCode);
-    setIsQrModalOpen(true);
+  const generateQRCode = async (courseCode: string) => {
+    const randomString = generateRandomString(8); // Generate a random 8-character string
+    const qrData = `${courseCode}${randomString}`; // Append the random string to the course code
+
+    try {
+      const dataUrl = await QRCode.toDataURL(qrData, { width: 500 });
+      setQrCodeDataUrl(dataUrl);
+      setSelectedCourse(courseCode);
+      setIsQrModalOpen(true);
+    } catch (error) {
+      console.error('Failed to generate QR Code', error);
+    }
   };
 
   const handleAddCourse = () => {
@@ -98,7 +116,7 @@ const AdminDashboard: React.FC = () => {
                 {courses.map((course) => (
                   <IonItem key={course.code} className="flex items-center justify-between">
                     <IonLabel>{course.code}</IonLabel>
-                    <IonButton color="secondary" onClick={() => generateRandomQRCode(course.code)}>
+                    <IonButton color="secondary" onClick={() => generateQRCode(course.code)}>
                       Generate QR
                     </IonButton>
                     <IonButton color="tertiary" onClick={() => downloadAttendance(course.code)}>
@@ -126,16 +144,17 @@ const AdminDashboard: React.FC = () => {
                   </IonButton>
                   <div className="flex flex-col items-center">
                     <h4 className="text-lg font-semibold text-gray-700">{selectedCourse} QR Code (Full Screen):</h4>
-                    <div className="mt-4">
-                      <QRCode value={qrCodeValue || ''} size={500} />
-                    </div>
+                    {qrCodeDataUrl && (
+                      <div className="mt-4">
+                        <img src={qrCodeDataUrl} alt="QR Code" width={500} height={500} />
+                      </div>
+                    )}
                   </div>
                 </IonContent>
               </IonModal>
 
               {/* Add Course Modal */}
-              <IonModal isOpen={isAddCourseModalOpen} onDidDismiss={() => setIsAddCourseModalOpen(false)}
-                >
+              <IonModal isOpen={isAddCourseModalOpen} onDidDismiss={() => setIsAddCourseModalOpen(false)}>
                 <IonContent class="ion-padding">
                   <IonButton
                     onClick={() => setIsAddCourseModalOpen(false)}
