@@ -43,30 +43,25 @@ const AdminRegister: React.FC = () => {
   };
 
   const onSubmit = async (data: any) => {
-    // Check if passwords match
     if (data.password !== data.confirm_password) {
-      setShowAlert(true); // Show alert if passwords do not match
+      setShowAlert(true);
       return;
     }
-
-    console.log(data);
+  
     try {
-      const response = await axios.post('http://localhost:5000/register', {
+      const response = await axios.post('http://localhost:5000/adminRegister', {
+        fullName: `${data.name} ${data.surname}`,
+        email: data.email,
+        password: data.password,
+        image: base64Image,
+      }, {
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'multipart/form-data',
-        },
-        formdata: {
-          fullName: data.name,
-          email: data.email,
-          password: data.password,
-          image: base64Image 
+          'Content-Type': 'application/json',
         }
       });
   
-      console.log(response.data);
       setMessage(response.data.message);
-  
     } catch (error: any) {
       console.error('Error during registration:', error);
       if (error.response && error.response.data) {
@@ -76,7 +71,7 @@ const AdminRegister: React.FC = () => {
       }
     }
   };
-
+  
   const handleRedirect = () => {
     history.push('/'); // Redirect to login page
   };

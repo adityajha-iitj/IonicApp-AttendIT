@@ -15,10 +15,6 @@ import {
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
-  IonRadioGroup,
-  IonRadio,
-  IonLabel,
-  IonItem,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -35,45 +31,42 @@ const Login: React.FC = () => {
   const history = useHistory();
   const { register, handleSubmit, setError, formState: { errors } } = useForm();
   const [message, setMessage] = useState<string | null>(null);
-  const [registrationType, setRegistrationType] = useState<'student' | 'admin'>('student');
-
-  const handleLoginClick = () => {
-    history.push('/capture');
-  };
-  
-  const handleSignupClick = () => {
-    if (registrationType === 'student') {
-      history.push('/signup');
-    } else {
-      history.push('/adminRegister');
-    }
-  };
 
   const onSubmit = async (data: any) => {
-    if (registrationType === 'student' && !Object.values(CourseCode).includes(data.courseCode)) {
+    if (!Object.values(CourseCode).includes(data.courseCode)) {
       setMessage('Invalid Course Code');
       return;
     }
-  
+    
     try {
-      const payload = registrationType === 'student' 
-        ? { email: data.email, password: data.password, courseCode: data.courseCode }
-        : { loginId: data.loginId, password: data.password };
-  
-      const response = await axios.post("http://localhost:5000/login", payload, {
+      const response = await axios.post('http://localhost:5000/login', {
+        email: data.email,
+        password: data.password,
+        role: data.role
+      }, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-        },
+        }
       });
-      const token = response.data.token;
-      localStorage.setItem('token', token);
-      setMessage("Login successful!");
-      handleLoginClick();
+
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        setMessage(response.data.message || "Login successful!");
+
+        // Redirect based on role
+        if (data.role === 'admin') {
+          history.push('/admin');
+        } else {
+          history.push('/capture');
+        }
+      }
+
     } catch (error: any) {
       console.error('Login error:', error);
-      setError('email', { type: 'manual', message: 'Login failed. Please try again.' });
-      setMessage('Login failed. Please check your credentials.');
+      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+      setError('email', { type: 'manual', message: errorMessage });
+      setMessage(errorMessage);
     }
   };
 
@@ -90,100 +83,79 @@ const Login: React.FC = () => {
             <IonCol size-md="6">
               <IonCard className="lg:max-w-sm p-6 space-y-8 dark:bg-gray-800">
                 <IonCardHeader>
-                  <IonCardTitle class="text-4xl font-bold text-gray-900 dark:text-white">
-                    Sign in 
+                  <IonCardTitle class="text-2xl font-bold text-gray-900 dark:text-white">
+                    Sign in to mark attendance
                   </IonCardTitle>
                 </IonCardHeader>
                 <IonCardContent>
-                  <IonRadioGroup value={registrationType} onIonChange={(e) => setRegistrationType(e.detail.value)}>
-                    <IonItem>
-                      <IonLabel>Student Registration</IonLabel>
-                      <IonRadio slot="start" value="student" />
-                    </IonItem>
-                    <IonItem>
-                      <IonLabel>Admin Registration</IonLabel>
-                      <IonRadio slot="start" value="admin" />
-                    </IonItem>
-                  </IonRadioGroup>
                   <form onSubmit={handleSubmit(onSubmit)}>
-                    {registrationType === 'student' ? (
-                      <>
-                        <IonInput
-                          {...register('email')}
-                          label="Your email"
-                          labelPlacement="floating"
-                          fill="solid"
-                          placeholder="name@company.com"
-                          type="email"
-                          required
-                        ></IonInput>
-                        <br />
-                        <IonInput
-                          {...register('password')}
-                          label="Your password"
-                          labelPlacement="floating"
-                          fill="solid"
-                          placeholder="••••••••"
-                          type="password"
-                          required
-                        ></IonInput>
-                        <br />
-                        <IonInput
-                          {...register('courseCode', {
-                            required: 'Course code is required',
-                            validate: (value) =>
-                              Object.values(CourseCode).includes(value) || 'Invalid Course Code',
-                          })}
-                          label="Course Code"
-                          labelPlacement="floating"
-                          fill="solid"
-                          placeholder="Enter course code (e.g., MATH101)"
-                          type="text"
-                        ></IonInput>
-                        {errors.courseCode && (
-                          <IonText color="danger">
-                            <p>{String(errors.courseCode.message)}</p>
-                          </IonText>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <IonInput
-                          {...register('loginId')}
-                          label="Login ID"
-                          labelPlacement="floating"
-                          fill="solid"
-                          placeholder="Enter your login ID"
-                          type="text"
-                          required
-                        ></IonInput>
-                        <br />
-                        <IonInput
-                          {...register('password')}
-                          label="Your password"
-                          labelPlacement="floating"
-                          fill="solid"
-                          placeholder="••••••••"
-                          type="password"
-                          required
-                        ></IonInput>
-                      </>
+                    <IonInput
+                      {...register('email', { required: true })}
+                      label="Your email"
+                      labelPlacement="floating"
+                      fill="solid"
+                      placeholder="name@company.com"
+                      type="email"
+                      required
+                    ></IonInput>
+                    <br />
+                    <IonInput
+                      {...register('password', { required: true })}
+                      label="Your password"
+                      labelPlacement="floating"
+                      fill="solid"
+                      placeholder="••••••••"
+                      type="password"
+                      required
+                    ></IonInput>
+                    <br />
+                    <IonInput
+                      {...register('courseCode', {
+                        required: 'Course code is required',
+                        validate: (value) =>
+                          Object.values(CourseCode).includes(value) || 'Invalid Course Code',
+                      })}
+                      label="Course Code"
+                      labelPlacement="floating"
+                      fill="solid"
+                      placeholder="Enter course code (e.g., MATH101)"
+                      type="text"
+                    ></IonInput>
+                    {errors.courseCode && (
+                      <IonText color="danger">
+                        <p>{String(errors.courseCode.message)}</p>
+                      </IonText>
                     )}
                     <br />
+                    <select 
+                      {...register('role', { required: true })}
+                      className="w-full p-2 mb-4 border rounded"
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <br />
                     <IonButton expand="block" type="submit" color="primary">
-                      {registrationType === 'student' ? 'Login as Student' : 'Login as Admin'}
+                      Login to your account
                     </IonButton>
                   </form>
+                  
+                  {/* Test button for redirecting to /capture */}
+                  <IonButton expand="block" color="secondary" onClick={() => history.push('/capture')}>
+                    Test
+                  </IonButton>
+
                   <IonText class="text-sm font-medium text-gray-900 dark:text-white mt-4">
                     Not registered yet?
-                    <IonButton fill="clear" color="primary" onClick={handleSignupClick}>
+                    <IonButton fill="clear" color="primary" onClick={() => history.push('/signup')}>
                       Register
                     </IonButton>
                   </IonText>
-                  {message && <p className="mt-3 text-center">{message}</p>}
-                  <IonButton expand="block" color="secondary" onClick={handleLoginClick}>
-                    Test Redirect to Capture
-                  </IonButton>
+                  {message && (
+                    <IonText color={message.includes('failed') ? 'danger' : 'success'}>
+                      <p className="mt-3 text-center">{message}</p>
+                    </IonText>
+                  )}
                 </IonCardContent>
               </IonCard>
             </IonCol>

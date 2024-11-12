@@ -61,7 +61,7 @@ app.post('/adminRegister', async (req, res) => {
     const embedding = []; // Use an empty array or default values if required
 
     // Create new admin user
-    const adminUser = new User({
+    const adminUser = new Admin({
       fullName,
       email,
       password: hashedPassword,
@@ -231,7 +231,7 @@ app.post('/captureYourself', upload.single('image'), async (req, res) => {
 // Login Endpoint
 app.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password,role } = req.body;
 
     // Check if the user exists
     const Model = role === 'admin' ? Admin : User;
