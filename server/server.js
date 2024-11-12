@@ -36,6 +36,54 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+const adminSchema = new mongoose.Schema({
+  fullName: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+});
+const Admin = mongoose.model('Admin', adminSchema);
+
+
+app.post('/adminRegister', async (req, res) => {
+  try {
+    const { fullName, email, password } = req.body;
+
+    // Check if user already exists
+    const existingUser = await Admin.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Admin already exists' });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Generate a default embedding or any other necessary default data if needed
+    const embedding = []; // Use an empty array or default values if required
+
+    // Create new admin user
+    const adminUser = new User({
+      fullName,
+      email,
+      password: hashedPassword,
+      embedding,  // If embedding is necessary, add a default array or remove this field if not used
+    });
+
+    await adminUser.save();
+
+    // Generate JWT token
+    const token = jwt.sign({ userId: adminUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    // Return success response with token
+    res.status(201).json({
+      message: 'Admin registered successfully',
+      token,
+    });
+  } catch (error) {
+    console.error('Error registering admin:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 // Register Endpoint
 app.post('/register', upload.single('image'), async (req, res) => {
@@ -154,6 +202,8 @@ app.post('/captureYourself', upload.single('image'), async (req, res) => {
           return res.status(400).json({ message: 'Invalid or empty embedding' });
         }
       }
+      console.log(embedding);
+      
 
       // Retrieve the registered user's embedding for comparison (assuming it’s saved in the User model)
       const user = await User.findOne({ email: req.body.email });
@@ -184,7 +234,9 @@ app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     // Check if the user exists
-    const user = await User.findOne({ email });
+    const Model = role === 'admin' ? Admin : User;
+
+    const user = await Model.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }

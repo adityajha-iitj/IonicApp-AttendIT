@@ -54,18 +54,18 @@ const Login: React.FC = () => {
       setMessage('Invalid Course Code');
       return;
     }
-
+  
     try {
-      const response = await axios.post("http://localhost:5000/login", {
+      const payload = registrationType === 'student' 
+        ? { email: data.email, password: data.password, courseCode: data.courseCode }
+        : { loginId: data.loginId, password: data.password };
+  
+      const response = await axios.post("http://localhost:5000/login", payload, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        formdata: registrationType === 'student' 
-          ? { email: data.email, password: data.password, courseCode: data.courseCode }
-          : { loginId: data.loginId, password: data.password },
       });
-
       const token = response.data.token;
       localStorage.setItem('token', token);
       setMessage("Login successful!");
