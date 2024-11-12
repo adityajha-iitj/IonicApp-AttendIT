@@ -238,7 +238,7 @@ app.post('/login', async (req, res) => {
 
     const user = await Model.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ message: 'User not found' });
     }
 
     // Verify the password
