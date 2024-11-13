@@ -39,7 +39,7 @@ const generateRandomString = (length: number): string => {
 const downloadAttendance = (courseCode: string) => {
   const attendanceData = [
     { date: '2024-10-10', time: '10:00 AM', student: 'John Doe' },
-    { date: '2024-10-10', time: '10:05 AM', student: 'Jane Smith' },
+    { date: '2024-10-10', time: '10:05 AM', student: 'Jane Smith' }
   ];
 
   const csvContent = [

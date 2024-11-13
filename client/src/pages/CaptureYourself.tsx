@@ -17,6 +17,7 @@ import { apiURL } from '../theme/constant';
 
 const CaptureYourself: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [attendanceMessage, setAttendanceMessage] = useState<string | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -24,17 +25,13 @@ const CaptureYourself: React.FC = () => {
     }
   };
 
-
-
   const handleSubmit = async () => {
     if (selectedImage) {
       console.log('Image selected:', selectedImage);
       
-      // Create a FormData object to send the image
       const formData = new FormData();
       formData.append('image', selectedImage);
   
-      // Send the image to the backend
       try {
         const response = await fetch(`${apiURL}/captureYourself`, {
           method: 'POST',
@@ -42,15 +39,18 @@ const CaptureYourself: React.FC = () => {
         });
   
         if (response.ok) {
-          console.log('Image uploaded successfully');
+          const data = await response.json();
+          setAttendanceMessage(data.attendanceMarked ? 'Attendance marked successfully!' : 'Attendance not marked.');
         } else {
-          console.log('Image upload failed');
+          setAttendanceMessage('Image upload failed. Please try again.');
         }
       } catch (error) {
         console.error('Error uploading image:', error);
+        setAttendanceMessage('An error occurred. Please try again.');
       }
     } else {
       console.log('No image selected');
+      setAttendanceMessage('Please select an image to upload.');
     }
   };
 
@@ -85,6 +85,11 @@ const CaptureYourself: React.FC = () => {
               {selectedImage && (
                 <IonText>
                   <p>Image selected: {selectedImage.name}</p>
+                </IonText>
+              )}
+              {attendanceMessage && (
+                <IonText color={attendanceMessage.includes('successfully') ? 'success' : 'danger'}>
+                  <p>{attendanceMessage}</p>
                 </IonText>
               )}
             </IonCol>
