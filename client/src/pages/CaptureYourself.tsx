@@ -13,6 +13,7 @@ import {
   IonRow,
   IonCol,
 } from '@ionic/react';
+import { apiURL } from '../theme/constant';
 
 const CaptureYourself: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -22,6 +23,8 @@ const CaptureYourself: React.FC = () => {
       setSelectedImage(e.target.files[0]);
     }
   };
+
+
 
   const handleSubmit = async () => {
     if (selectedImage) {
@@ -33,7 +36,7 @@ const CaptureYourself: React.FC = () => {
   
       // Send the image to the backend
       try {
-        const response = await fetch('http://localhost:5000/captureYourself', {
+        const response = await fetch(`${apiURL}/captureYourself`, {
           method: 'POST',
           body: formData,
         });

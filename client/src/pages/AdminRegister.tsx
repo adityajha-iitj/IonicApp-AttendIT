@@ -18,6 +18,7 @@ import {
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom'; // Import useHistory for navigation
+import { apiURL } from '../theme/constant';
 
 const AdminRegister: React.FC = () => {
   const { register, handleSubmit, setError, formState: { errors } } = useForm();
@@ -47,9 +48,11 @@ const AdminRegister: React.FC = () => {
       setShowAlert(true);
       return;
     }
+
+
   
     try {
-      const response = await axios.post('http://localhost:5000/adminRegister', {
+      const response = await axios.post(`${apiURL}/adminRegister`, {
         fullName: `${data.name} ${data.surname}`,
         email: data.email,
         password: data.password,

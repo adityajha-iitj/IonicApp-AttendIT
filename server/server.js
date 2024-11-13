@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
-const upload = require('../multer'); // Multer setup for handling file uploads
+const upload = require('./multer'); // Multer setup for handling file uploads
 const { exec } = require('child_process');
 const fs = require('fs');
 const bodyParser = require('body-parser');
@@ -15,7 +15,20 @@ const sharp = require('sharp');
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+const corsOptions = {
+  origin: 'http://localhost:8100', // Allow requests from this origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  optionsSuccessStatus: 200,
+};
+
+// Apply CORS middleware globally
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
+
+
 app.use(bodyParser.json({ limit: '100000mb' }));
 app.use(bodyParser.urlencoded({ limit: '100000mb', extended: true }));
 

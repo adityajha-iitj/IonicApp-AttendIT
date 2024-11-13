@@ -18,6 +18,7 @@ import {
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom'; // Import useHistory for navigation
+import { apiURL } from '../theme/constant';
 
 const Signup: React.FC = () => {
   const { register, handleSubmit, setError, formState: { errors } } = useForm();
@@ -49,9 +50,11 @@ const Signup: React.FC = () => {
       return;
     }
 
+
+
     console.log(data);
     try {
-      const response = await axios.post('http://localhost:5000/register', {
+      const response = await axios.post(`${apiURL}/register`, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'multipart/form-data',

@@ -19,6 +19,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
+import { apiURL } from '../theme/constant';
 
 enum CourseCode {
   MATH101 = 'MATH101',
@@ -37,9 +38,11 @@ const Login: React.FC = () => {
       setMessage('Invalid Course Code');
       return;
     }
+
+
     
     try {
-      const response = await axios.post('http://localhost:5000/login', {
+      const response = await axios.post(`${apiURL}/login`, {
         email: data.email,
         password: data.password,
         role: data.role
