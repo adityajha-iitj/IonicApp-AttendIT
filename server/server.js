@@ -15,17 +15,10 @@ const sharp = require('sharp');
 
 // Middleware
 app.use(express.json());
-const corsOptions = {
-  origin: 'http://localhost:8100', // Allow requests from this origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  optionsSuccessStatus: 200,
-};
+
 
 // Apply CORS middleware globally
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+app.use(cors());
 
 
 
@@ -280,5 +273,5 @@ app.post('/login', async (req, res) => {
 
 // Start Server
  const PORT = process.env.PORT || 5000;
- app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+ app.listen(PORT,"0.0.0.0", () => console.log(`Server running on port ${PORT}`));
 // module.exports = app;

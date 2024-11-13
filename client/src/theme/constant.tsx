@@ -1,1 +1,1 @@
-export const apiURL = "https://true-sites-melt.loca.lt"
+export const apiURL = "http://172.31.47.209:5000"
