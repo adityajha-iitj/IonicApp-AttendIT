@@ -15,7 +15,7 @@ function installPython() {
   } else if (process.platform === "darwin") {
     installCommand = "brew install python";
   } else if (process.platform === "linux") {
-    installCommand = "sudo apt-get install python3 -y";
+    installCommand = "apt-get install python3 -y";
   } else {
     console.error("Unsupported platform.");
     return;
