@@ -21,14 +21,16 @@ function installPython() {
     return;
   }
 
-  exec(installCommand, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error installing Python: ${error.message}`);
-      return;
-    }
-    console.log(`Python installed: ${stdout}`);
-    installRequirements();
-  });
+  // exec(installCommand, (error, stdout, stderr) => {
+  //   if (error) {
+  //     console.error(`Error installing Python: ${error.message}`);
+  //     return;
+  //   }
+  //   console.log(`Python installed: ${stdout}`);
+  //   installRequirements();
+  // });
+
+  installRequirements()
 }
 
 // Step 2: Install requirements from requirements.txt
