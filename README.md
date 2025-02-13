@@ -2,6 +2,8 @@
 
 The Photo-Based Attendance System is an innovative solution designed to modernize attendance management through facial recognition technology. This system integrates the FaceNet model for generating facial embeddings and utilizes MongoDB for secure data storage. The implementation encompasses both client-side and server-side components, providing comprehensive functionality for user management and attendance tracking.
 
+This is an Ionic framework based application which is used to capture attendance of students through face recognition. Students first register themselves by providing their details and uploading their photo, then the respective course instructor shows the qr code in the class, which the student scans, then scans his face, then attendance of the respective course gets updated. There are two sets of interfaces for two types of user, Faculty and Students, Students follow the same flow of marking the attendance as mentioned, and faculties after loggin in get to see options to add their respective courses, generate or show qr code of the respective course (which will be random everytime generated), and download the csv file of all the students details whose attendance have been marked successfully of the respective course.
+
 ## Getting Started
 
 ### Prerequisites
